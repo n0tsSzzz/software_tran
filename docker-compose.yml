@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    environment:
+      PG_USER: ${POSTGRES_USER:-postgres}
+      PG_PASS: ${POSTGRES_PASSWORD:-postgres}
+      PG_HOST: db
+      PG_PORT: 5432
+      PG_DATABASE: ${POSTGRES_DB:-mydb}
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+
+  db:
+    image: postgres:15-alpine
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-mydb}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-mydb}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:
